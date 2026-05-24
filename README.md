@@ -3,7 +3,7 @@ dnsdrdos - 2026 Edition
  📋 Overview 
 
 dnsdrdos is a high-performance DNS Distributed Reflection Denial of Service tool.  
-Engineered for **2026-era networks**, this upgraded version introduces multi-threaded attack engine, IPv6 support, DNSSEC awareness, and real-time statistics — all while preserving the legendary structure of **noptrix's** original nullsecurity masterpiece.
+Engineered for 2026-era networks, this upgraded version introduces multi-threaded attack engine, IPv6 support, DNSSEC awareness, and real-time statistics — all while preserving the legendary structure of **noptrix's** original nullsecurity masterpiece.
 
 dnsdrdos是一款高性能 DNS 分布式反射 DoS 攻击工具。  
 经过 2026 年升级版，引入了多线程攻击引擎、IPv6 支持、DNSSEC 感知和实时统计功能，同时保留了 noptrix 经典的 nullsecurity 版本精髓。
@@ -36,10 +36,10 @@ New Features in 2026 Edition / 2026 新版本特性
 
  1. Multi-Threaded Attack Engine / 多线程攻击引擎
 The original (v0.1) sends each DNS packet sequentially through a single raw socket.  
-The 2026 edition spawns a **thread pool** (configurable via `-t`), each with its own socket, packet buffer, and statistics counter, enabling **CPU-parallel** reflection that maximizes network saturation against target servers.
+The 2026 edition spawns a thread pool** (configurable via `-t`), each with its own socket, packet buffer, and statistics counter, enabling **CPU-parallel** reflection that maximizes network saturation against target servers.
 
  2. Dual-Stack IPv4 / IPv6 Support / 双栈 IPv4 支持
-Enhanced with **sockaddr_in** and **sockaddr_in6** unions in the packet structure.  
+Enhanced with **sockaddr_in and **sockaddr_in6** unions in the packet structure.  
 The new version detects target IP family and auto-configures the raw socket, TTL, and address family dynamically.
 
  3. DNS Amplification Modes / DNS 放大模式
@@ -56,10 +56,10 @@ prompting DNS servers to return DNSSEC-signed responses (~830+ bytes vs. 40 byte
 
  5. Source Port Randomization / 源端口随机化
 Each thread uses its own offset in the source port range (`base + thread_index * offset`),  
-bypassing **connection tracking** and **NAT state tables** more effectively.
+bypassing **connection tracking and NAT state tables more effectively.
 
  6. Real-Time Statistics / 实时统计
-A dedicated statistics structure tracks, **per-thread**:
+A dedicated statistics structure tracks, **per-thread:
 - packets sent
 - bytes sent
 - send errors
@@ -118,7 +118,7 @@ A dedicated statistics structure tracks, **per-thread**:
 
 免责声明:
 
-`dnsdrdos` v2.6.0 **仅供测试和学术研究目的使用。作者不对因使用或误用本程序而引起的任何直接或间接损失承担赔偿责任，包括但不限于网络中断、服务不可用、带宽耗尽和基础设施过载等情形。
+`dnsdrdos` v2.6.0 仅供测试和学术研究目的使用。作者不对因使用或误用本程序而引起的任何直接或间接损失承担赔偿责任，包括但不限于网络中断、服务不可用、带宽耗尽和基础设施过载等情形。
 
 在目标网络环境中对 DNS 服务发起分布式反射攻击之前，请确保已获得目标网络运营商或服务提供商的书面或口头许可。在未经授权的条件下使用本程序可能导致：
 
@@ -178,13 +178,12 @@ This program is provided "as-is" without any warranties of any kind. Without any
 
  License
 
-This file was updated on 2026-05-25.  
 For full details, see: [http://www.nullsecurity.net](http://www.nullsecurity.net)
 
 Dual licensed under BSD-3-Clause with Nullsecurity.
 
 Original: `noptrix` — dnsdrdos (circa 2010)  
-2026 Upgrade**: **Leechuihui** — January 5, 2026
+2026 Upgrade: Leechuihui 
 
 ---
 
