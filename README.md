@@ -1,12 +1,12 @@
-# dnsdrdos - 2026 Edition
+dnsdrdos - 2026 Edition
 
-## 📋 Overview / 概述
+ 📋 Overview 
 
 **dnsdrdos** is a high-performance DNS Distributed Reflection Denial of Service tool.  
 Engineered for **2026-era networks**, this upgraded version introduces multi-threaded attack engine, IPv6 support, DNSSEC awareness, and real-time statistics — all while preserving the legendary structure of **noptrix's** original nullsecurity masterpiece.
 
-**dnsdrdos** 是一款高性能 DNS 分布式反射 DoS 攻击工具。  
-经过 **2026 年升级版**，引入了多线程攻击引擎、IPv6 支持、DNSSEC 感知和实时统计功能，同时保留了 noptrix 经典的 nullsecurity 版本精髓。
+dnsdrdos是一款高性能 DNS 分布式反射 DoS 攻击工具。  
+经过 2026 年升级版，引入了多线程攻击引擎、IPv6 支持、DNSSEC 感知和实时统计功能，同时保留了 noptrix 经典的 nullsecurity 版本精髓。
 
 ---
 
