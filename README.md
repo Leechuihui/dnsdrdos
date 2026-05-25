@@ -16,9 +16,9 @@ New Features in 2026 Edition / 2026 新版本特性
 |----------------|---------------------|----------------------|
 |Architecture / 架构 | Single-threaded (1 thread) | Multi-threaded with thread pool (default 4, up to 64+) |
 |Protocol / 协议 | IPv4 only | Dual-stack IPv4 / IPv6 |
-|Attack Modes / 攻击模式** | Simple A-record reflection | ANY, TXT, MX, SOA, SRV, NS, DNSSEC, EDNS0 |
+|Attack Modes / 攻击模式 | Simple A-record reflection | ANY, TXT, MX, SOA, SRV, NS, DNSSEC, EDNS0 |
 |Amplification | ~7:1 ratio | Up to 70:1 with DNSSEC + EDNS0 |
-|Packet Size / 包大小** | 1400 bytes | Up to 1500 bytes (Jumbo frame support) |
+|Packet Size / | 1400 bytes | Up to 1500 bytes (Jumbo frame support) |
 |Source Port | rand() / 8-bit | 16-bit random with per-thread offset |
 |Statistics | None | Real-time per-thread counters + cumulative |
 |DNSSEC | Basic awareness | EDNS0 OPT record, DO-bit set, large DNSSEC queries |
@@ -45,10 +45,10 @@ The new version detects target IP family and auto-configures the raw socket, TTL
  3. DNS Amplification Modes / DNS 放大模式
 New packet payload structures for specialized DNS queries that maximize the ratio between response and request size:
 
-- AMPL_TXT** — TXT records produce ~500-700 byte responses
-- AMPL_ANY** — ANY query returns all records (peak amplification)
-- AMPL_DNSSEC** — DNSKEY RR yields 1500+ byte responses
-- AMPL_OPT** — EDNS0 OPT pseudo-RR with up to **4096 byte** payloads
+- AMPL_TXT — TXT records produce ~500-700 byte responses
+- AMPL_ANY — ANY query returns all records (peak amplification)
+- AMPL_DNSSEC — DNSKEY RR yields 1500+ byte responses
+- AMPL_OPT — EDNS0 OPT pseudo-RR with up to **4096 byte** payloads
 
  4. DNSSEC Awareness / DNSSEC 感知
 EDNS0 OPT pseudo-record is included in the DNS query with the **DO-bit set**,  
@@ -159,7 +159,7 @@ Please ensure you have obtained proper authorization** from the target network o
 - Violation of SLA agreements
 - Legal exposure in severe cases
 
-Users should note:**
+Users should note:
 - This tool is designed for single-host testing and suitable for small-scale experimental DDoS attacks.
 - The tool is intended for testing purposes and should not be used at scale without proper authorization.
 - It is recommended to test against specific IP addresses in controlled environments.
