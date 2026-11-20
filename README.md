@@ -1,5 +1,7 @@
 dnsdrdos - 2026 Edition
 
+[![C](https://img.shields.io/badge/C-C11-red?logo=c&logoColor=white)](https://en.wikipedia.org/wiki/C_(programming_language)) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE) [![Category: Security](https://img.shields.io/badge/Category-Security-8b5cf6)](https://github.com/Leechuihui/dnsdrdos)
+
  📋 Overview 
 
 dnsdrdos is a high-performance DNS Distributed Reflection Denial of Service tool.  
